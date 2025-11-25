@@ -10,11 +10,14 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs';
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const roboto = Roboto({
   weight : ["400", "700"],
   subsets: ["latin"],
   variable: "--font-roboto",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,28 +33,33 @@ export default function RootLayout({
   return (
     <ClerkProvider>
     <html lang="en" suppressHydrationWarning>
-      <body className={`${roboto.variable} antialiased`}>
-      <ThemeProvider
+      <body className={`${roboto.variable} antialiased flex flex-col min-h-screen`}>
+        <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
             <header className="flex justify-end items-center p-4 gap-4 h-16">
-            <SignedOut>
-              <SignInButton />
-              <SignUpButton>
-                <button className="bg-[#6c47ff] text-ceramic-white rounded-full font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 cursor-pointer">
+              <ThemeToggle />
+              <SignedOut>
+                <SignInButton >
+                  <Button>
+                  Sign In
+                  </Button>
+                </SignInButton>
+                <SignUpButton>
+                  <Button variant="secondary">
                   Sign Up
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
+                  </Button>  
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
           </header>
-        {children}
-      </ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
     </ClerkProvider>

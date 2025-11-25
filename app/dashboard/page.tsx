@@ -1,15 +1,11 @@
-import React from 'react'
-import { ThemeToggle } from "@/components/theme-toggle";
+import React from "react";
 
 const DashboardPage = () => {
-  return (
-    <>
-        <h1>
-            Welcome to the Dashboard! You are successfully authenticated.
-        </h1>
-        <ThemeToggle />
-    </>
-  )
-}
+    return (
+		<div className="flex items-center justify-center">
+			<h1 className="text-8xl font-bold">Dashboard Page</h1>
+		</div>
+	);	
+};
 
-export default DashboardPage
+export default DashboardPage;
