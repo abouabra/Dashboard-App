@@ -8,7 +8,7 @@ export default clerkMiddleware(async (auth, req) => {
   const { isAuthenticated } = await auth();
 
   if (isAuthenticated && isHomePage(req)) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/agencies", req.url));
   }
 
   // If not signed in and it's not a public route → redirect to "/"
