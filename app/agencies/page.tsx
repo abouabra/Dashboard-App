@@ -1,57 +1,54 @@
-import React from "react";
-import ClerkProfile from "@/components/clerk-profile";
-import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import ExpandableDataTable from "@/components/expandable-data-table";
+"use client"
 
+import { useState, useEffect } from "react"
+import ExpandableDataTable from "@/components/expandable-data-table"
+import { Loader2 } from "lucide-react"
 
-interface Agency {
-	id: string;
-	name: string | null;
-	state: string | null;
-	state_code: string | null;
-	type: string | null;
-	population: number | null;
-	website: string | null;
-	total_schools: number | null;
-	total_students: number | null;
-	mailing_address: string | null;
-	grade_span: string | null;
-	locale: string | null;
-	csa_cbsa: string | null;
-	domain_name: string | null;
-	physical_address: string | null;
-	phone: string | null;
-	status: string | null;
-	student_teacher_ratio: number | null;
-	supervisory_union: string | null;
-	county: string | null;
-	created_at: Date | null;
-	updated_at: Date | null;
-  }
-  
+interface MinimalAgency {
+  id: string
+  name: string | null
+  state: string | null
+  population: number | null
+}
 
-const AgenciesPage = async () => {
-	const agencies: Agency[] = await prisma.agency.findMany({
-		take: 20,
-	});
+export default function Page() {
+  const [data, setData] = useState<MinimalAgency[]>([])
+  const [loading, setLoading] = useState(true)
 
-	return (
-<main className="min-h-screen bg-background p-8">
+  useEffect(() => {
+    const fetchMinimalAgencies = async () => {
+      try {
+        const response = await fetch("/api/agencies")
+        const agencies = await response.json()
+        setData(agencies)
+      } catch (error) {
+        console.error("Error fetching agencies:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMinimalAgencies()
+  }, [])
+
+  return (
+    <main className="min-h-screen bg-background p-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground">Agency Page</h1>
+          <h1 className="text-4xl font-bold text-foreground">Agencies</h1>
           <p className="mt-2 text-muted-foreground">
-            Click on a row to view detailed information about each agency.
+            Click on a row to view detailed information about an agency.
           </p>
         </div>
-        <ExpandableDataTable data={agencies} />
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+          </div>
+        ) : (
+          <ExpandableDataTable data={data} />
+        )}
       </div>
     </main>
-	);
-
-	
-};
-
-export default AgenciesPage;
+  )
+}

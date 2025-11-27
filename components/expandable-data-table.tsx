@@ -1,18 +1,39 @@
 "use client"
 
-import { Fragment, useState } from "react"
-import { ChevronDown } from "lucide-react"
+import React from "react"
+
+import { useState } from "react"
+import {
+  ChevronDown,
+  MapPin,
+  Users,
+  Building2,
+  Phone,
+  Globe,
+  Mail,
+  MapIcon,
+  BookOpen,
+  TrendingUp,
+  School,
+  Shield,
+  Map,
+  Loader2,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
+import PremiumLimitDialog from "@/components/premium-limit-dialog"
 
-interface Agency {
+interface MinimalAgency {
   id: string
   name: string | null
   state: string | null
+  population: number | null
+}
+
+interface Agency extends MinimalAgency {
   state_code: string | null
   type: string | null
-  population: number | null
   website: string | null
   total_schools: number | null
   total_students: number | null
@@ -32,7 +53,7 @@ interface Agency {
 }
 
 interface ExpandableDataTableProps {
-  data: Agency[]
+  data: MinimalAgency[]
 }
 
 const formatValue = (value: string | number | null | undefined): string => {
@@ -42,11 +63,67 @@ const formatValue = (value: string | number | null | undefined): string => {
   return String(value)
 }
 
+const DetailField = ({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string
+  value: string | number | null | undefined | React.ReactNode
+  icon?: React.ComponentType<{ className?: string }>
+}) => (
+  <div className="flex items-start gap-3">
+    {Icon && <Icon className="h-4 w-4 text-primary mt-1 shrink-0" />}
+    <div className="flex flex-col">
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-sm text-foreground">
+        {typeof value === "string" || typeof value === "number" ? formatValue(value) : value}
+      </span>
+    </div>
+  </div>
+)
+
 export default function ExpandableDataTable({ data }: ExpandableDataTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [expandedData, setExpandedData] = useState<Record<string, Agency>>({})
+  const [loading, setLoading] = useState<string | null>(null)
+  const [showLimitDialog, setShowLimitDialog] = useState(false)
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
+  const toggleExpand = async (id: string) => {
+    if (expandedId === id) {
+      setExpandedId(null)
+      return
+    }
+
+    try {
+      setLoading(id)
+      // const limitResponse = await fetch("/api/daily-limit", {
+      //   method: "POST",
+      // })
+
+      // const limitData = await limitResponse.json()
+
+      // if (!limitData.allowed) {
+      //   setShowLimitDialog(true)
+      //   setLoading(null)
+      //   return
+      // }
+
+      const response = await fetch(`/api/agencies/${id}`)
+      const agencyData = await response.json()
+
+      if (response.ok) {
+        setExpandedData((prev) => ({
+          ...prev,
+          [id]: agencyData,
+        }))
+        setExpandedId(id)
+      }
+    } catch (error) {
+      console.error("Error fetching agency details:", error)
+    } finally {
+      setLoading(null)
+    }
   }
 
   const formatDate = (date: Date | null) => {
@@ -54,143 +131,200 @@ export default function ExpandableDataTable({ data }: ExpandableDataTableProps) 
     return new Date(date).toLocaleDateString()
   }
 
-  const DetailField = ({
-    label,
-    value,
-  }: {
-    label: string
-    value: string | number | null | undefined
-  }) => (
-    <div className="flex flex-col">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <span className="text-sm text-foreground">{formatValue(value)}</span>
-    </div>
-  )
+  const currentExpandedData = expandedId ? expandedData[expandedId] : null
 
   return (
-    <Card className="overflow-hidden border-border">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="w-12"></TableHead>
-            <TableHead className="font-semibold text-foreground">Name</TableHead>
-            <TableHead className="font-semibold text-foreground">State</TableHead>
-            <TableHead className="text-right font-semibold text-foreground">Population</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((row) => (
-            <Fragment key={row.id}>
-              <TableRow
-                key={row.id}
-                onClick={() => toggleExpand(row.id)}
-                className="cursor-pointer border-border transition-colors hover:bg-secondary"
-              >
-                <TableCell className="p-4">
-                  <ChevronDown
-                    className={cn(
-                      "h-5 w-5 text-muted-foreground transition-transform duration-200",
-                      expandedId === row.id && "rotate-180",
+    <>
+      <Card className="overflow-hidden border-border">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border hover:bg-transparent">
+              <TableHead className="w-12"></TableHead>
+              <TableHead className="font-semibold text-foreground">Name</TableHead>
+              <TableHead className="font-semibold text-foreground">State</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">Population</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((row) => (
+              <React.Fragment key={row.id}>
+                <TableRow
+                  onClick={() => toggleExpand(row.id)}
+                  className="cursor-pointer border-border transition-colors hover:bg-secondary"
+                >
+                  <TableCell className="p-4">
+                    {loading === row.id ? (
+                      <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                    ) : (
+                      <ChevronDown
+                        className={cn(
+                          "h-5 w-5 text-muted-foreground transition-transform duration-200",
+                          expandedId === row.id && "rotate-180",
+                        )}
+                      />
                     )}
-                  />
-                </TableCell>
-                <TableCell className="font-medium text-foreground">{formatValue(row.name)}</TableCell>
-                <TableCell className="text-foreground">{formatValue(row.state)}</TableCell>
-                <TableCell className="text-right text-foreground">
-                  {row.population ? row.population.toLocaleString() : "N/A"}
-                </TableCell>
-              </TableRow>
-
-              {expandedId === row.id && (
-                <TableRow className="border-border bg-card/50 hover:bg-card/50">
-                  <TableCell colSpan={4} className="p-6">
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                      {/* Contact Information */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Contact Information</h3>
-                        <div className="space-y-3">
-                          <DetailField label="Phone" value={row.phone} />
-                          <div className="flex flex-col">
-                            <span className="text-sm font-medium text-muted-foreground">Website</span>
-                            {row.website ? (
-                              <a
-                                href={row.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline"
-                              >
-                                {row.website}
-                              </a>
-                            ) : (
-                              <span className="text-sm text-foreground">N/A</span>
-                            )}
-                          </div>
-                          <DetailField label="Email Domain" value={row.domain_name} />
-                        </div>
-                      </div>
-
-                      {/* Address Information */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Addresses</h3>
-                        <div className="space-y-3">
-                          <DetailField label="Mailing Address" value={row.mailing_address} />
-                          <DetailField label="Physical Address" value={row.physical_address} />
-                        </div>
-                      </div>
-
-                      {/* Academic Information */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Academic Details</h3>
-                        <div className="space-y-3">
-                          <DetailField label="Grade Span" value={row.grade_span} />
-                          <DetailField label="Type" value={row.type} />
-                          <DetailField label="Locale" value={row.locale} />
-                        </div>
-                      </div>
-
-                      {/* Statistics */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Statistics</h3>
-                        <div className="space-y-3">
-                          <DetailField label="Total Schools" value={row.total_schools} />
-                          <DetailField
-                            label="Total Students"
-                            value={row.total_students ? row.total_students.toLocaleString() : undefined}
-                          />
-                          <DetailField
-                            label="Student-Teacher Ratio"
-                            value={row.student_teacher_ratio ? row.student_teacher_ratio.toFixed(1) : undefined}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Administrative Information */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Administrative</h3>
-                        <div className="space-y-3">
-                          <DetailField label="County" value={row.county} />
-                          <DetailField label="Supervisory Union" value={row.supervisory_union} />
-                          <DetailField label="Status" value={row.status} />
-                        </div>
-                      </div>
-
-                      {/* Regional Information */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-foreground">Region</h3>
-                        <div className="space-y-3">
-                          <DetailField label="State Code" value={row.state_code} />
-                          <DetailField label="CSA/CBSA" value={row.csa_cbsa} />
-                          <DetailField label="Last Updated" value={formatDate(row.updated_at)} />
-                        </div>
-                      </div>
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">{formatValue(row.name)}</TableCell>
+                  <TableCell className="text-foreground">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span>{formatValue(row.state)}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-foreground">
+                        {row.population ? row.population.toLocaleString() : "N/A"}
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
-              )}
-            </Fragment>
-          ))}
-        </TableBody>
-      </Table>
-    </Card>
+
+                {expandedId === row.id && currentExpandedData && (
+                  <TableRow className="border-border bg-card/50 hover:bg-card/50">
+                    <TableCell colSpan={4} className="p-6">
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {/* Contact Information */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-primary" />
+                            Contact Information
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField label="Phone" value={currentExpandedData.phone} icon={Phone} />
+                            <DetailField
+                              label="Website"
+                              value={
+                                currentExpandedData.website ? (
+                                  <a
+                                    href={currentExpandedData.website}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    {currentExpandedData.website}
+                                  </a>
+                                ) : (
+                                  "N/A"
+                                )
+                              }
+                              icon={Globe}
+                            />
+                            <DetailField label="Email Domain" value={currentExpandedData.domain_name} icon={Mail} />
+                          </div>
+                        </div>
+
+                        {/* Address Information */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <MapIcon className="h-4 w-4 text-primary" />
+                            Addresses
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField
+                              label="Mailing Address"
+                              value={currentExpandedData.mailing_address}
+                              icon={MapPin}
+                            />
+                            <DetailField
+                              label="Physical Address"
+                              value={currentExpandedData.physical_address}
+                              icon={MapIcon}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Academic Information */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <BookOpen className="h-4 w-4 text-primary" />
+                            Academic Details
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField label="Grade Span" value={currentExpandedData.grade_span} icon={BookOpen} />
+                            <DetailField label="Type" value={currentExpandedData.type} icon={Building2} />
+                            <DetailField label="Locale" value={currentExpandedData.locale} icon={MapPin} />
+                          </div>
+                        </div>
+
+                        {/* Statistics */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary" />
+                            Statistics
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField
+                              label="Total Schools"
+                              value={currentExpandedData.total_schools}
+                              icon={School}
+                            />
+                            <DetailField
+                              label="Total Students"
+                              value={
+                                currentExpandedData.total_students
+                                  ? currentExpandedData.total_students.toLocaleString()
+                                  : undefined
+                              }
+                              icon={Users}
+                            />
+                            <DetailField
+                              label="Student-Teacher Ratio"
+                              value={
+                                currentExpandedData.student_teacher_ratio
+                                  ? currentExpandedData.student_teacher_ratio.toFixed(1)
+                                  : undefined
+                              }
+                              icon={TrendingUp}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Administrative Information */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <Shield className="h-4 w-4 text-primary" />
+                            Administrative
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField label="County" value={currentExpandedData.county} icon={Map} />
+                            <DetailField
+                              label="Supervisory Union"
+                              value={currentExpandedData.supervisory_union}
+                              icon={Shield}
+                            />
+                            <DetailField label="Status" value={currentExpandedData.status} icon={Shield} />
+                          </div>
+                        </div>
+
+                        {/* Regional Information */}
+                        <div className="space-y-3">
+                          <h3 className="font-semibold text-foreground flex items-center gap-2">
+                            <Map className="h-4 w-4 text-primary" />
+                            Region
+                          </h3>
+                          <div className="space-y-3">
+                            <DetailField label="State Code" value={currentExpandedData.state_code} icon={Map} />
+                            <DetailField label="CSA/CBSA" value={currentExpandedData.csa_cbsa} icon={Map} />
+                            <DetailField
+                              label="Last Updated"
+                              value={formatDate(currentExpandedData.updated_at)}
+                              icon={Map}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+
+      <PremiumLimitDialog open={showLimitDialog} onOpenChange={setShowLimitDialog} />
+    </>
   )
 }
