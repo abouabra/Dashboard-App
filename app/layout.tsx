@@ -28,9 +28,9 @@ export default async function RootLayout({
 	const { userId } = await auth();
 
 	return (
-		<ClerkProvider>
-			<html lang="en" suppressHydrationWarning>
-				<body className={`${roboto.variable} antialiased min-h-screen`}>
+		<html lang="en" suppressHydrationWarning>
+			<body className={`${roboto.variable} antialiased min-h-screen flex flex-col`}>
+				<ClerkProvider>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 						<header className="flex items-center justify-between h-16 px-6 shadow-sm bg-background/80 backdrop-blur-md">
 							{/* Left Navigation */}
@@ -66,10 +66,12 @@ export default async function RootLayout({
 								</SignedIn>
 							</div>
 						</header>
-						{children}
+						<main className="flex flex-1 flex-col">
+							{children}
+						</main>
 					</ThemeProvider>
-				</body>
-			</html>
-		</ClerkProvider>
+				</ClerkProvider>
+			</body>
+		</html>
 	);
 }

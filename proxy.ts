@@ -1,7 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/"]);
 const isHomePage = createRouteMatcher(["/"]);
 
 export default clerkMiddleware(async (auth, req) => {
@@ -11,8 +10,7 @@ export default clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/agencies", req.url));
   }
 
-  // If not signed in and it's not a public route → redirect to "/"
-  if (!isAuthenticated && !isPublicRoute(req)) {
+  if (!isAuthenticated && !isHomePage(req)) {
     return NextResponse.redirect(new URL("/", req.url));
   }
   

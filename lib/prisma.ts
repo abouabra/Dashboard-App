@@ -1,18 +1,14 @@
 // lib/prisma.ts
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 declare global {
-  var prisma: PrismaClient | undefined;
+	var prisma: PrismaClient | undefined;
 }
 
 const prismaGlobal = global as unknown as typeof globalThis & {
-  prisma?: PrismaClient;
+	prisma?: PrismaClient;
 };
 
-export const prisma =
-  prismaGlobal.prisma ??
-  new PrismaClient({
-    // you may pass log: ['query'] when debugging
-  });
+export const prisma = prismaGlobal.prisma ?? new PrismaClient();
 
-if (process.env.NODE_ENV !== 'production') prismaGlobal.prisma = prisma;
+if (process.env.NODE_ENV !== "production") prismaGlobal.prisma = prisma;
