@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-const DAILY_LIMIT = 10;
+const DAILY_LIMIT = 50;
 
 export async function POST() {
     const { userId } = await auth();

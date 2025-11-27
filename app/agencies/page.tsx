@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import ExpandableDataTable from "@/components/expandable-data-table"
+import ExpandableAgencyTable from "@/components/expandable-agency-table"
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -21,7 +21,8 @@ interface PaginationInfo {
   hasPreviousPage: boolean
 }
 
-export default function Page() {
+
+export default function AgenciesPage() {
   const [data, setData] = useState<MinimalAgency[]>([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
@@ -71,7 +72,7 @@ export default function Page() {
           </div>
         ) : (
           <>
-            <ExpandableDataTable data={data} />
+            <ExpandableAgencyTable data={data} />
 
             {pagination && (
               <div className="mt-8 flex items-center justify-between border-t border-border pt-6">

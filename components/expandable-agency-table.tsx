@@ -52,7 +52,7 @@ interface Agency extends MinimalAgency {
   updated_at: Date | null
 }
 
-interface ExpandableDataTableProps {
+interface ExpandableAgencyTableProps {
   data: MinimalAgency[]
 }
 
@@ -83,7 +83,7 @@ const DetailField = ({
   </div>
 )
 
-export default function ExpandableDataTable({ data }: ExpandableDataTableProps) {
+export default function ExpandableAgencyTable({ data }: ExpandableAgencyTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [expandedData, setExpandedData] = useState<Record<string, Agency>>({})
   const [loading, setLoading] = useState<string | null>(null)
@@ -97,18 +97,6 @@ export default function ExpandableDataTable({ data }: ExpandableDataTableProps) 
 
     try {
       setLoading(id)
-      // const limitResponse = await fetch("/api/daily-limit", {
-      //   method: "POST",
-      // })
-
-      // const limitData = await limitResponse.json()
-
-      // if (!limitData.allowed) {
-      //   setShowLimitDialog(true)
-      //   setLoading(null)
-      //   return
-      // }
-
       const response = await fetch(`/api/agencies/${id}`)
       const agencyData = await response.json()
 
@@ -175,7 +163,7 @@ export default function ExpandableDataTable({ data }: ExpandableDataTableProps) 
                     <div className="flex items-center justify-end gap-2">
                       <Users className="h-4 w-4 text-muted-foreground shrink-0" />
                       <span className="text-foreground">
-                        {row.population ? row.population.toLocaleString() : "N/A"}
+                        {formatValue(row.population)}
                       </span>
                     </div>
                   </TableCell>
@@ -257,25 +245,17 @@ export default function ExpandableDataTable({ data }: ExpandableDataTableProps) 
                           <div className="space-y-3">
                             <DetailField
                               label="Total Schools"
-                              value={currentExpandedData.total_schools}
+                              value={formatValue(currentExpandedData.total_schools)}
                               icon={School}
                             />
                             <DetailField
                               label="Total Students"
-                              value={
-                                currentExpandedData.total_students
-                                  ? currentExpandedData.total_students.toLocaleString()
-                                  : undefined
-                              }
+                              value={formatValue(currentExpandedData.total_students)}
                               icon={Users}
                             />
                             <DetailField
                               label="Student-Teacher Ratio"
-                              value={
-                                currentExpandedData.student_teacher_ratio
-                                  ? currentExpandedData.student_teacher_ratio.toFixed(1)
-                                  : undefined
-                              }
+                              value={formatValue(currentExpandedData.student_teacher_ratio)}
                               icon={TrendingUp}
                             />
                           </div>
