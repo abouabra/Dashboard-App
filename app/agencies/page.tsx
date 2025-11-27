@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import ExpandableDataTable from "@/components/expandable-data-table"
-import { Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 interface MinimalAgency {
   id: string
@@ -11,16 +12,28 @@ interface MinimalAgency {
   population: number | null
 }
 
+interface PaginationInfo {
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+}
+
 export default function Page() {
   const [data, setData] = useState<MinimalAgency[]>([])
   const [loading, setLoading] = useState(true)
+  const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     const fetchMinimalAgencies = async () => {
       try {
-        const response = await fetch("/api/agencies")
-        const agencies = await response.json()
-        setData(agencies)
+        const response = await fetch(`/api/agencies?page=${currentPage}`)
+        const result = await response.json()
+        setData(result.data)
+        setPagination(result.pagination)
       } catch (error) {
         console.error("Error fetching agencies:", error)
       } finally {
@@ -29,7 +42,18 @@ export default function Page() {
     }
 
     fetchMinimalAgencies()
-  }, [])
+  }, [currentPage])
+
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prev) => Math.max(1, prev - 1))
+  }
+
+  const handleNextPage = () => {
+    if (pagination?.hasNextPage) {
+      setCurrentPage((prev) => prev + 1)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-background p-8">
@@ -46,7 +70,69 @@ export default function Page() {
             <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
           </div>
         ) : (
-          <ExpandableDataTable data={data} />
+          <>
+            <ExpandableDataTable data={data} />
+
+            {pagination && (
+              <div className="mt-8 flex items-center justify-between border-t border-border pt-6">
+                <div className="text-sm text-muted-foreground">
+                  Page {pagination.currentPage} of {pagination.totalPages} ({pagination.totalItems} total)
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={!pagination.hasPreviousPage}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }).map((_, i) => {
+                      let pageNum: number
+                      if (pagination.totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (pagination.currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i
+                      } else {
+                        pageNum = pagination.currentPage - 2 + i
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={pageNum === pagination.currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="h-8 w-8 p-0"
+                        >
+                          {pageNum}
+                        </Button>
+                      )
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={!pagination.hasNextPage}
+                    className="flex items-center gap-2 bg-transparent"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+          
         )}
       </div>
     </main>
