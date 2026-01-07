@@ -66,9 +66,7 @@ export default async function RootLayout({
 								</SignedIn>
 							</div>
 						</header>
-						<main className="flex flex-1 flex-col">
-							{children}
-						</main>
+						<main className="flex flex-1 flex-col">{children}</main>
 					</ThemeProvider>
 				</ClerkProvider>
 			</body>
